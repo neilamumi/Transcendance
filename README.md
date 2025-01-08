@@ -30,8 +30,6 @@ You can find the project subject [here](https://github.com/42-Student-Teams/ft_t
 * Multiplayer through websockets
 * Multiple language support
 
-The full set of features can be found [here](https://github.com/42-Student-Teams/ft_transcendence/issues/2).
-
 ### Setting up the project
 * Clone the repository
 * Create and populate both `.env` and `frontend/.env` files. The `BACKEND_IP` should be the domain or the ip of the host.
