@@ -1,8 +1,10 @@
 import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap/dist/js/bootstrap.bundle.js';
 import "./assets/css/style.css";
 import store from "./store/index.js";
+import { tokenExpired } from "./utils/jwtUtils.js";
 import router, { navigateTo } from "./utils/router.js";
+import { openCommWebsocket } from "./utils/wsUtils.js";
+import { setProfile } from "./utils/profileUtils.js";
 
 // load components
 
@@ -27,16 +29,17 @@ window.addEventListener("popstate", (event) => {
 document.addEventListener("DOMContentLoaded", async () => {
 	setupNavigation();
 
-	// if (!store.state.isLoggedIn) {
-	// 	try {
-	// 		await checkAuthStatus();
-	// 	} catch (error) {
-	// 		//console.log(error);
-	// 		navigateTo("/login");
-	// 		return;
-	// 	}
-	// }
-
+	if (!store.state.isLoggedIn) {
+		if (window.location.pathname != '/oauthcallback') {
+			console.log("Checking auth status");
+			const res = await authStatus();
+			if (!res) {
+				console.log('Not logged in, redirecting to login');
+				navigateTo("/login");
+				return;
+			}
+		}
+	}
 	handleDefaultRoute();
 });
 
@@ -51,40 +54,67 @@ function setupNavigation() {
 	});
 }
 
-async function setUserInfo() {
-	const response = await fetch("/api/v1/user", {
-		method: "GET",
-		credentials: "include",
-	});
 
-	const data = await response.json();
+async function setUserProfile() {
+	try {
+		const jwt = localStorage.getItem('jwt');
+		const apiurl = process.env.API_URL;
+		const response = await fetch(`${apiurl}/get_user_profile`, {
+			method: 'GET',
+			headers: {
+				'Authorization': `Bearer ${jwt}`,
+				'Content-Type': 'application/json'
+			}
+		});
 
-	store.dispatch("setIntraId", { intraId: data.user.intraId });
-	// store.dispatch("setLanguage", { languageId: data.preferred_language });
+		const data = await response.json();
+
+		if (!response.ok) {
+			throw new Error("Failed to get profile");
+		}
+
+		await setProfile(data);
+	} catch (error) {
+		console.error('Error fetching user profile:', error);
+	}
 }
 
-async function checkAuthStatus() {
-	const response = await fetch("/api/check-login", {
-		credentials: "include",
-	});
-
-	const data = await response.json();
-
-	if (data.isLoggedIn) {
-		store.dispatch("logIn");
-		// await setUserInfo();
-		navigateTo("/");
-		// console.log("login state: redirect to /");
-	} else {
-		throw new Error("Not logged in");
+async function authStatus() {
+	try {
+		const jwt = localStorage.getItem('jwt');
+		const apiurl = process.env.API_URL;
+		const response = await fetch(`${apiurl}/get_logged_in_status`, {
+			method: 'GET',
+			headers: {
+				'Authorization': `Bearer ${jwt}`,
+				'Content-Type': 'application/json'
+			}
+		});
+		if (response.ok) {
+			store.dispatch("logIn");
+			await setUserProfile();
+			navigateTo("/");
+			return true;
+		} else {
+			return false;
+		}
+	} catch (error) {
+		//console.error('Error fetching auth status:', error);
+		return false;
 	}
 }
 
 function handleDefaultRoute() {
-	if (!store.state.gameStatus === "playing" && ["/game"].includes(window.location.pathname)) {
-		navigateTo("/");
+	if (tokenExpired() && !window.location.pathname.includes("/oauthcallback")) {
+		navigateTo("/login");
+		console.log("Token expired, redirecting to login");
 	} else {
-		router();
+		openCommWebsocket();
+		if (!store.state.gameStatus === "playing" && ["/game"].includes(window.location.pathname)) {
+			navigateTo("/");
+		}
+		else {
+			router();
+		}
 	}
 }
-

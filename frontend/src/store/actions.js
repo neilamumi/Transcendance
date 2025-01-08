@@ -1,3 +1,5 @@
+import state from "./state.js";
+
 function updateLocation(context, payload) {
 	context.commit("updateLocation", payload);
 }
@@ -7,17 +9,74 @@ function logIn(context) {
 }
 
 function logOut(context) {
-	context.commit("logOut");
+    if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+		try {
+            state.socket.send(JSON.stringify({func: 'logout'}));
+        } catch(err) {
+            console.log('Failed to send WS.');
+        }
+    }
+    localStorage.clear();
+    context.commit("logOut");
 }
 
 
 function setLanguage(context, payload) {
+    localStorage.setItem('language', payload);
     context.commit("setLanguage", payload);
-	document.documentElement.lang = payload.languageId;
+    document.documentElement.lang = payload;
 }
 
-function setIntraId(context, payload) {
-	context.commit("setIntraId", payload);
+function setUsername(context, payload) {
+	context.commit("setUsername", payload);
+}
+
+function setFirstName(context, payload) {
+	context.commit("setFirstName", payload);
+}
+
+function setLastName(context, payload) {
+	context.commit("setLastName", payload);
+}
+
+function setAvatar(context, payload) {
+	context.commit("setAvatar", payload);
+}
+
+function setGamesPlayed(context, payload) {
+	context.commit("setGamesPlayed", payload);
+}
+
+function setGamesLossed(context, payload) {
+	context.commit("setGamesLossed", payload);
+}
+
+function setGamesWon(context, payload) {
+	context.commit("setGamesWon", payload);
+}
+
+function setJoinTournamentNickName(context, payload) {
+    context.commit("setJoinTournamentNickName", payload);
+}
+
+function setWebSocket(context, payload) {
+	context.commit("setWebSocket", payload);
+}
+
+function setGameSocket(context, payload) {
+	context.commit("setGameSocket", payload);
+}
+
+function setCurrentGameData(context, payload) {
+	context.commit("setCurrentGameData", payload);
+}
+
+function setGameRequestId(context, payload) {
+	context.commit("setGameRequestId", payload);
+}
+
+function updateFriendStatus(context, payload) {
+    context.commit("updateFriendStatus", payload);
 }
 
 export default {
@@ -25,5 +84,17 @@ export default {
 	logIn,
 	logOut,
 	setLanguage,
-	setIntraId,
+	setJoinTournamentNickName,
+	setWebSocket,
+	updateFriendStatus,
+	setUsername,
+	setFirstName,
+	setLastName,
+	setAvatar,
+	setGamesPlayed,
+	setGamesLossed,
+	setGamesWon,
+	setGameSocket,
+	setCurrentGameData,
+	setGameRequestId,
 };

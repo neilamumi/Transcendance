@@ -8,7 +8,8 @@ COPY ./requirements.txt /
 
 RUN apk add --no-cache postgresql-libs python3 py3-pip
 
-#RUN apk add libffi-dev, python-dev for arm64 (m1,  m2, etc...)
+# for arm64 For (m1,  m2, etc...)
+#RUN apk add libffi-dev python-dev  
 
 # Thanks to --virtual .build-deps we can yank all deps at the end
 RUN \
@@ -25,11 +26,15 @@ WORKDIR /app
 
 EXPOSE 8000
 
-# COPY ./entrypoint.sh /tmp/entrypoint.sh
-# RUN chmod +x /tmp/entrypoint.sh
-# ENTRYPOINT [ "sh" , "/tmp/entrypoint.sh"]
+COPY ./entrypoint.sh /tmp/entrypoint.sh
+RUN chmod +x /tmp/entrypoint.sh
 USER $USER
-#CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
-CMD ["python", "-m", "uvicorn", "--host", "0.0.0.0", "app.asgi:application"]
+ENTRYPOINT [ "sh" , "/tmp/entrypoint.sh"]
+
+# CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+
+
+#CMD ["python", "-m", "uvicorn", "--reload", "--host", "0.0.0.0", "app.asgi:application"]
+
 
 #CMD ["sleep", "infinity"]

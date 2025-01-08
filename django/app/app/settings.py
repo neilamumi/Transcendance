@@ -10,30 +10,56 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import logging
 import os
 from pathlib import Path
+from django.conf import settings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+# DEFAULT_AVATAR_PATH = os.path.join(BASE_DIR, 'files', 'default_avatar.png')
+
+# avatar_dir = os.path.join(settings.MEDIA_ROOT, 'avatars')
+# print(f"Le chemin du dossier avatars est : {avatar_dir}")
+
+# print(f"Le dossier existe : {os.path.exists(avatar_dir)}")
+
+# if os.path.exists(avatar_dir):
+#     print("Fichiers dans le dossier avatars :")
+#     for file in os.listdir(avatar_dir):
+#         print(file)
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9&ys+#0$ffoz189_)^55m7h8pxj1_c=!q@%-$34ws4g(m+!#ov'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+debug_val = os.getenv('DJANGO_DEBUG')
+if debug_val is None:
+    debug_val = True
+if debug_val == 'true':
+    debug_val = True
+DEBUG = debug_val
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    os.getenv('BACKEND_IP', '0.0.0.0'),
+    'pong.ch',
+]
+
+JWT_SECRET = os.getenv('JWT_SECRET')
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,7 +85,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'app.urls'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:8000",  
+    "http://127.0.0.1:8000",
 ]
 
 TEMPLATES = [
@@ -78,8 +104,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'app.wsgi.application'
-
+#WSGI_APPLICATION = 'app.wsgi.application'
+ASGI_APPLICATION = 'app.asgi.application'
+#ASGI_APPLICATION = 'app.routing.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -127,10 +154,22 @@ USE_I18N = True
 USE_TZ = True
 
 
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = 'static/'
+
+MEDIA_URL = ""
+MEDIA_ROOT = os.path.join(BASE_DIR, "")
+
+
+
+
+# Chemin vers le dossier contenant l'avatar par défaut
+# DEFAULT_AVATAR_PATH = os.path.join(BASE_DIR, 'files', 'default_avatar.png')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -146,5 +185,30 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
     ],
 }'''
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
-TOKEN_EXPIRATION_MINUTES:int = os.getenv("TOKEN_EXPIRATION_MINUTES", 15)
+
+TOKEN_EXPIRATION_MINUTES:int = int(os.getenv("TOKEN_EXPIRATION_MINUTES", 15))
+
+
+AUTH_USER_MODEL = 'backend.jwtuser'
+
+MAX_TOURNAMENT_PLAYERS = 4
+if MAX_TOURNAMENT_PLAYERS < 4:
+    MAX_TOURNAMENT_PLAYERS = 4
+
+MAX_NAME_LENGTH = 30
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.error("BRUH")
+if os.getenv('LOGGING_DEBUG') == 'true':
+    logging.basicConfig(level=logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
+
+logging.getLogger('daphne').setLevel(logging.WARN)

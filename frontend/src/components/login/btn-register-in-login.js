@@ -1,29 +1,20 @@
 import Component from "../../library/component.js";
 import { navigateTo } from "../../utils/router.js";
 
-export default class Login extends Component {
-	constructor() {
-		super({ element: document.getElementById("btnRegisterInLogin") });
-		this.render();
-	}
+export default class BtnRegisterInLogin extends Component {
+    constructor() {
+        super({ element: document.getElementById("btnRegisterInLogin") });
+        this.render();
+    }
 
-	async render() {
-
-		const view = /*html*/ `
+    async render() {
+        const view = /*html*/ `
             <small>Don't have account ?
-                <a href="">Sign Up</a>
+                <a href="/register" data-link>Sign up</a>
             </small>
         `;
 
-		this.element = document.getElementById("btnRegisterInLogin");
-		this.element.innerHTML = view;
-		this.handleEvent();
-	}
-
-	async handleEvent() {
-		this.element.querySelector("a").addEventListener("click", () => {
-			event.preventDefault();
-			navigateTo("/register");
-		});
-	}
+        this.element = document.getElementById("btnRegisterInLogin");
+        this.element.innerHTML = view;
+    }
 }
